@@ -1,0 +1,11 @@
+build/
+bin/
+cmake-build-debug/
+cmake-build-release/
+CMakeFiles/
+CMakeCache.txt
+Makefile
+
+.idea/
+.vscode/
+*.DS_Store
