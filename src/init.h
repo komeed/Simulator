@@ -15,15 +15,13 @@ struct Buffers {
 };
 
 void initUI() {
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0, SCR_WIDTH, SCR_HEIGHT, 0, -1, 1); // Adjust for your window dimensions
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glDisable(GL_DEPTH_TEST);   // Disable depth testing for 2D rendering
-    glDisable(GL_CULL_FACE);    // Disable culling
-    glDisable(GL_LIGHTING);
-    glEnable(GL_PROGRAM_POINT_SIZE);
+    glEnable(GL_DEPTH_TEST);         // Enables correct 3D depth handling
+    glEnable(GL_CULL_FACE);          // Optional: hides back-facing polygons
+    glCullFace(GL_BACK);             // Cull back faces
+    glFrontFace(GL_CCW);             // Counter-clockwise = front-facing
+
+    glEnable(GL_PROGRAM_POINT_SIZE); // Needed if using gl_PointSize in shaders
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f); // Background color
 }
 
 Buffers initBuffers(std::vector<float> vertices, std::vector<unsigned int> indices = {}) {
@@ -44,6 +42,8 @@ Buffers initBuffers(std::vector<float> vertices, std::vector<unsigned int> indic
     }
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     buffer.VAO = VAO;
     buffer.VBO = VBO;
     return buffer;
