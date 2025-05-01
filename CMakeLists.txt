@@ -8,6 +8,8 @@ add_executable(${PROJECT_NAME}
         src/Shader.h
         src/constants.h
         src/init.h
+        src/Ball.cpp
+        src/Ball.h
 )
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_11)
 

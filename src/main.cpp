@@ -5,13 +5,22 @@
 #include <thread>
 #include <chrono>
 #include <init.h>
-#include <Sphere.h>
+#include <Ball.h>
 
 // Callback to resize the viewport when window is resized
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     (void)window; // Tell the compiler we're intentionally ignoring this parameter
     glViewport(0, 0, width, height);
+}
+void initUI() {
+    glEnable(GL_DEPTH_TEST);         // Enables correct 3D depth handling
+    glEnable(GL_CULL_FACE);          // Optional: hides back-facing polygons
+    glCullFace(GL_BACK);             // Cull back faces
+    glFrontFace(GL_CCW);             // Counter-clockwise = front-facing
+
+    glEnable(GL_PROGRAM_POINT_SIZE); // Needed if using gl_PointSize in shaders
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f); // Background color
 }
 
 int main() {
@@ -50,29 +59,25 @@ int main() {
     // Set viewport and callback
     int frameBufferWidth, frameBufferHeight;
     glfwGetFramebufferSize(window, &frameBufferWidth, &frameBufferHeight);
+    initUI();
+
     glViewport(0, 0, frameBufferWidth, frameBufferHeight);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    initUI();
-    Sphere sphere(1, 20, 20);
-    sphere.draw();
-    std::vector<float> pointVert = sphere.getVertices();
-    std::vector<unsigned int> indicesVert = sphere.getIndices();
-    //float* vertices = circle.retrieveVertexData();
-    //unsigned int* indices = circle.retrieveIndecesData();
+    /*Sphere sphere(1, 20, 20);
+    sphere.draw();*/
+    Ball sphere(glm::vec3(0, 0, 0),ARADIUS,  10);
+    Icosphere constraint(1, 3, false);
+
     const char fragFile[29] = "Shaders/fragment_shader.glsl";
     const char vertFile[29] = "Shaders/vertex_shader.glsl";
     Shader shader(vertFile, fragFile);
     unsigned int shaderProgram = shader.returnID();
 
-    Buffers circleBuffer = initBuffers(pointVert, indicesVert);
-    Buffers pointBuffer = initBuffers(pointVert);
 
-    glm::mat4 trans = glm::mat4(1.0f);
-
-    unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
     unsigned int viewLoc = glGetUniformLocation(shaderProgram, "view");
-    unsigned int colorLoc = glGetUniformLocation(shaderProgram, "color");
     unsigned int projectionLoc = glGetUniformLocation(shaderProgram, "projection");
+    sphere.setLocations(shaderProgram);
+    constraint.setLocations(shaderProgram);
     // Render loop
     double lastTime = glfwGetTime();
     double timer = lastTime;
@@ -99,15 +104,10 @@ int main() {
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
-
-        glBindVertexArray(circleBuffer.VAO);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, circleBuffer.EBO);
-        glUniform4f(colorLoc, 1, 1, 1, 1);
-        glDrawElements(GL_TRIANGLES, indicesVert.size(), GL_UNSIGNED_INT, 0);
-        glBindVertexArray(pointBuffer.VAO);
-        glUniform4f(colorLoc, 1, 0, 0, 1);
-        glDrawArrays(GL_POINTS, 0, pointVert.size()/3);
+        //glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+        sphere.nextFrame(deltaTime);
+        constraint.initUniforms(new float[4]{1, 0, 0, 1});
+        constraint.drawPoints();
         glfwSwapBuffers(window);
         double const elapsed = glfwGetTime() - startTime;
         if (elapsed < TARGET_FRAME_TIME) {

@@ -8,13 +8,7 @@
 #include <constants.h>
 #include <iostream>
 
-struct Buffers {
-    unsigned int VAO;
-    unsigned int VBO;
-    unsigned int EBO;
-};
-
-void initUI() {
+/*void initUI() {
     glEnable(GL_DEPTH_TEST);         // Enables correct 3D depth handling
     glEnable(GL_CULL_FACE);          // Optional: hides back-facing polygons
     glCullFace(GL_BACK);             // Cull back faces
@@ -22,9 +16,9 @@ void initUI() {
 
     glEnable(GL_PROGRAM_POINT_SIZE); // Needed if using gl_PointSize in shaders
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f); // Background color
-}
+}*/
 
-Buffers initBuffers(std::vector<float> vertices, std::vector<unsigned int> indices = {}) {
+/*Buffers initBuffers(std::vector<float> vertices, std::vector<unsigned int> indices = {}) {
     Buffers buffer;
     unsigned int EBO;
     unsigned int VBO;
@@ -47,6 +41,6 @@ Buffers initBuffers(std::vector<float> vertices, std::vector<unsigned int> indic
     buffer.VAO = VAO;
     buffer.VBO = VBO;
     return buffer;
-}
+}*/
 
 #endif //INIT_H
