@@ -10,6 +10,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <string>
+#include <vector>
+#include <cmath>
 #define UNUSED(x) (void)(x)
 
 //window dimensions
@@ -25,5 +27,12 @@ const float ARADIUS = RADIUS/(SCR_HEIGHT*MPR); // in NPR
 //constraint data
 const float LARGERADIUS = SCR_WIDTH*MPR; // in meters
 const float NUMLINES = 40;
+
+//colors
+const float BALLCOLOR[3] = {0.5f, 0.5f, 0.5f};
+const float LIGHTCOLOR[3] = {1, 1,1};
+const float CONSTRAINTCOLOR[3] = {0.7f, 0, 0};
+
+const glm::vec3 LIGHTPOS(0, 1.2f, 2);
 
 #endif //CONSTANTS_H

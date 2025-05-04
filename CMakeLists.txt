@@ -2,14 +2,15 @@ cmake_minimum_required(VERSION 3.31)
 
 project(Simulator)
 add_executable(${PROJECT_NAME}
-        src/Circle.cpp
-        src/Circle.h
         src/Shader.cpp
         src/Shader.h
         src/constants.h
-        src/init.h
         src/Ball.cpp
         src/Ball.h
+        src/Camera.cpp
+        src/Camera.h
+        src/Solver.cpp
+        src/Solver.h
 )
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_11)
 

@@ -15,7 +15,7 @@
 
 #include <vector>
 #include <map>
-#include <init.h>
+#include <constants.h>
 
 struct Buffers {
     unsigned int VAO;
@@ -73,6 +73,8 @@ public:
     unsigned int getTransformLoc() { return transformLoc;}
     unsigned int getColorLoc() { return colorLoc;}
 
+    void setTrans(glm::mat4 transform) { trans = transform;}
+
     //generate buffers
     void generateSphereBuffer();
     void generateLineBuffer();
@@ -86,7 +88,7 @@ public:
     // debug
     void printSelf() const;
 
-    void initUniforms(float sphereColor[4]);
+    void initUniforms(float sphereColor[3]);
 
 protected:
     glm::mat4 trans;
@@ -117,6 +119,8 @@ private:
     void addLineIndices(unsigned int i1, unsigned int i2);
     unsigned int addSubVertexAttribs(const float v[3], const float n[3], const float t[2]);
 
+    void combineVertices();
+
     // memeber vars// circumscribed radius
     int subdivision;                        // subdivision frequencies
     bool smooth;
@@ -126,10 +130,12 @@ private:
     std::vector<unsigned int> indices;
     std::vector<unsigned int> lineIndices;
     std::map<std::pair<float, float>, unsigned int> sharedIndices;   // indices of shared vertices, key is tex coord (s,t)
+    std::vector<float> combinedVertices;
 
     //buffer locations
     unsigned int transformLoc;
     unsigned int colorLoc;
+    unsigned int lightColorLoc;
 
     //buffers
     Buffers sphereBuffer;

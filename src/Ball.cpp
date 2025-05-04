@@ -3,39 +3,70 @@
 //
 
 #include "Ball.h"
-Ball::Ball(glm::vec3 position, float radius, int subdivisions) : Icosphere(radius, subdivisions, true) {
-    mass = 1;
+
+#include <iostream>
+
+Ball::Ball(glm::vec3 position, float mass, float radius, int subdivisions) : Icosphere(radius, subdivisions, true), mass(mass) {
     pos = position*(SCR_HEIGHT*MPR);
-    initialP = pos;
+    lastP = pos;
     dPos = glm::vec3(0.0f, 0.0f, 0.0f);
     accel = glm::vec3(0.0f, 0.0f, 0.0f);
+    sigmaForce = glm::vec3(0.0f, 0.0f, 0.0f);
+    velocity = glm::vec3(0.0f, 0.0f, 0.0f);
 }
 
 void Ball::checkBounds() {
-    float d = glm::distance(pos, glm::vec3(0, 0, 0));
-    if (d > LARGERADIUS- RADIUS) {
-        pos = pos*(LARGERADIUS- RADIUS)/d;
+    if (useConstraint) {
+        float d = glm::length(pos);
+        float maxDist = LARGERADIUS - getAdjustedRadius();
+
+        if (d > maxDist) {
+            pos = pos*(maxDist)/d;
+        }
     }
 }
 
-void Ball::nextFrame(float deltaTime) {
-    applyForce(glm::vec3(0, -1, 0), 9.8f); //apply gravity force
-    /*dPos = (initialV * deltaTime) + (0.5f*accel*float((pow(deltaTime, 2)))); //find next position
-    dPos = dPos /(SCR_WIDTH*MPR); //convert to NPC coordinates
-    initialV = initialV + (accel * deltaTime);
-    pos += dPos;*/
-    glm::vec3 prevP = initialP;
-    initialP = pos;
-    pos = ((2.0f*pos) - prevP + accel*float(pow(deltaTime, 2)));
+glm::vec2 Ball::returnFinalV(float m1, float m2, float v1, float v2) {
+    // Apply the 1D elastic collision formula for each ball's final velocity
+    float v1_final = ((m1 - m2) * v1 + 2 * m2 * v2) / (m1 + m2);
+    float v2_final = ((m2 - m1) * v2 + 2 * m1 * v1) / (m1 + m2);
+
+    return glm::vec2(v1_final, v2_final);
+}
+
+
+
+void Ball::updatePosition(float deltaTime) {
+    velocity = pos - lastP;
+    lastP = pos;
+    pos = pos + velocity + accel * deltaTime * deltaTime;
     checkBounds();
-    dPos = (pos - initialP)/(SCR_WIDTH*MPR);
     sigmaForce = glm::vec3(0.0f, 0.0f, 0.0f);
-    trans = glm::translate(trans, dPos);
-    initUniforms(new float[4]{1, 1, 1, 1});
-    drawSphere();
+    trans = glm::translate(glm::mat4(1.0f), pos/(SCR_HEIGHT*MPR));
 }
 
 void Ball::applyForce(glm::vec3 force, float mag) {
     sigmaForce += force * mag;
     accel = sigmaForce / mass;
+}
+
+void Ball::render() {
+    initUniforms((float*)BALLCOLOR);
+    drawSphere();
+}
+void Ball::checkCollision(std::vector<Ball *> balls) {
+    for (Ball* ball : balls) {
+        if (this != ball) {
+            //float d1 = glm::distance(this->getPos(), ball->getPos());
+            float dx = this->getAdjustedRadius() + ball->getAdjustedRadius() - glm::distance(this->getPos(), ball->getPos());
+            if (dx > glm::epsilon<float>()) {
+                glm::vec3 direction = this->getPos() - ball->getPos();
+                glm::vec3 unitDir = glm::normalize(direction);
+                this->pos = this->pos + unitDir * dx/2.0f;
+                this->checkBounds();
+                ball->pos = ball->pos - unitDir*dx/2.0f;
+                ball->checkBounds();
+            }
+        }
+    }
 }

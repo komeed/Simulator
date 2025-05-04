@@ -19,7 +19,6 @@
 #else
 //#include <GL/gl.h>
 #endif
-#include <glad/glad.h>
 
 #include <iostream>
 #include <iomanip>
@@ -43,7 +42,7 @@ Icosphere::Icosphere(float radius, int sub, bool smooth) : radius(radius), subdi
         buildVerticesSmooth();
     else
         buildVerticesFlat();
-    updateRadius();
+    combineVertices();
     generateLineBuffer();
     generatePointBuffer();
     generateSphereBuffer();
@@ -52,8 +51,21 @@ Icosphere::Icosphere(float radius, int sub, bool smooth) : radius(radius), subdi
 
 void Icosphere::setLocations(unsigned int shaderProgram) {
     transformLoc = glGetUniformLocation(shaderProgram, "transform");
-    colorLoc = glGetUniformLocation(shaderProgram, "color");
+    colorLoc = glGetUniformLocation(shaderProgram, "objectColor");
+    lightColorLoc = glGetUniformLocation(shaderProgram, "lightColor");
 }
+
+void Icosphere::combineVertices() {
+    for (std::size_t i = 0; i < vertices.size(); i+=3) {
+        combinedVertices.push_back(vertices[i]);
+        combinedVertices.push_back(vertices[i+1]);
+        combinedVertices.push_back(vertices[i+2]);
+        combinedVertices.push_back(normals[i]);
+        combinedVertices.push_back(normals[i+1]);
+        combinedVertices.push_back(normals[i+2]);
+    }
+}
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -145,9 +157,10 @@ void Icosphere::printSelf() const
 // OpenGL RC must be set before calling it
 ///////////////////////////////////////////////////////////////////////////////
 
-void Icosphere::initUniforms(float sphereColor[4]) {
+void Icosphere::initUniforms(float sphereColor[3]) {
     glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
-    glUniform4f(colorLoc, sphereColor[0], sphereColor[1], sphereColor[2], sphereColor[3]);
+    glUniform3f(colorLoc, sphereColor[0], sphereColor[1], sphereColor[2]);
+    glUniform3f(lightColorLoc, LIGHTCOLOR[0], LIGHTCOLOR[1], LIGHTCOLOR[2]);
 }
 
 
@@ -1222,13 +1235,15 @@ void Icosphere::generateLineBuffer() {
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, combinedVertices.size() * sizeof(float), combinedVertices.data(), GL_STATIC_DRAW);
     glGenBuffers(1, &EBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, lineIndices.size() * sizeof(float), lineIndices.data(), GL_STATIC_DRAW);
     lineBuffer.EBO = EBO;
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     lineBuffer.VAO = VAO;
@@ -1241,9 +1256,11 @@ void Icosphere::generatePointBuffer() {
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glBufferData(GL_ARRAY_BUFFER, combinedVertices.size() * sizeof(float), combinedVertices.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     pointBuffer.VAO = VAO;
     pointBuffer.VBO = VBO;
@@ -1256,13 +1273,15 @@ void Icosphere::generateSphereBuffer() {
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, combinedVertices.size() * sizeof(float), combinedVertices.data(), GL_STATIC_DRAW);
     glGenBuffers(1, &EBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(float), indices.data(), GL_STATIC_DRAW);
     sphereBuffer.EBO = EBO;
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     sphereBuffer.VAO = VAO;

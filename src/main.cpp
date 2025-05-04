@@ -1,17 +1,39 @@
 // main.cpp
 #include <Shader.h>
 #include <iostream>
-#include <Circle.h>
 #include <thread>
 #include <chrono>
-#include <init.h>
 #include <Ball.h>
+#include <Camera.h>
+#include <Solver.h>
+#include <random>
+
+float randomFloat() {
+    static std::random_device rd;                      // Non-deterministic seed
+    static std::mt19937 gen(rd());                     // Mersenne Twister engine
+    static std::uniform_real_distribution<float> dist(0.0f, 0.8f);  // Range [0.0, 1.0)
+
+    return dist(gen);  // Call the distribution with the engine
+}
 
 // Callback to resize the viewport when window is resized
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     (void)window; // Tell the compiler we're intentionally ignoring this parameter
     glViewport(0, 0, width, height);
+}
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    UNUSED(scancode);
+    UNUSED(mods);
+    Solver* solver = static_cast<Solver*>(glfwGetWindowUserPointer(window));
+    if (action == GLFW_PRESS && key == GLFW_KEY_SPACE) {
+        if (key == GLFW_KEY_SPACE) {
+            solver->append(new Ball(glm::vec3(randomFloat(), randomFloat(), randomFloat()), 1, ARADIUS, 15));
+        }
+        if (key == GLFW_KEY_Q) {
+
+        }
+    }
 }
 void initUI() {
     glEnable(GL_DEPTH_TEST);         // Enables correct 3D depth handling
@@ -60,14 +82,14 @@ int main() {
     int frameBufferWidth, frameBufferHeight;
     glfwGetFramebufferSize(window, &frameBufferWidth, &frameBufferHeight);
     initUI();
-
     glViewport(0, 0, frameBufferWidth, frameBufferHeight);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     /*Sphere sphere(1, 20, 20);
     sphere.draw();*/
-    Ball sphere(glm::vec3(0, 0, 0),ARADIUS,  10);
+    Icosphere light(0.1f, 5, false);
     Icosphere constraint(1, 3, false);
-
+   // Camera cam(glm::vec3(-5, 0, 0), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+    Camera cam(5, 2);
     const char fragFile[29] = "Shaders/fragment_shader.glsl";
     const char vertFile[29] = "Shaders/vertex_shader.glsl";
     Shader shader(vertFile, fragFile);
@@ -76,11 +98,20 @@ int main() {
 
     unsigned int viewLoc = glGetUniformLocation(shaderProgram, "view");
     unsigned int projectionLoc = glGetUniformLocation(shaderProgram, "projection");
-    sphere.setLocations(shaderProgram);
+    Solver solver(shaderProgram);
+    solver.append(new Ball(glm::vec3(0, 0, 0.7), 1, ARADIUS, 15));
+    glfwSetWindowUserPointer(window, &solver);
+
     constraint.setLocations(shaderProgram);
+    light.setLocations(shaderProgram);
     // Render loop
     double lastTime = glfwGetTime();
     double timer = lastTime;
+    glm::mat4 lightModel = glm::mat4(1);
+    lightModel = glm::translate(lightModel, LIGHTPOS);
+    unsigned int lightPosLocation = glGetUniformLocation(shaderProgram, "lightPos");
+    unsigned int viewPosLocation = glGetUniformLocation(shaderProgram, "viewPos");
+    glfwSetKeyCallback(window, key_callback);
     while (!glfwWindowShouldClose(window))
     {
         double const startTime = glfwGetTime();
@@ -89,25 +120,24 @@ int main() {
             // std::cout << int(timer) << std::endl;
         }
         timer = timer + deltaTime;
-
         lastTime = glfwGetTime();
         ///////////////////////////////////////////////
         glfwPollEvents();
         //RENDER
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUseProgram(shaderProgram);
-
-        const float radius = 5.0f;
-        float camX = sin(glfwGetTime()/2) * radius;
-        float camZ = cos(glfwGetTime()/2) * radius;
-        glm::mat4 view = glm::lookAt(glm::vec3(camX, 2, camZ), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-        glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+        cam.rotate(glfwGetTime());
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam.getView()));
+        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(cam.getProjection()));
+        glUniform3fv(lightPosLocation, 1, glm::value_ptr(LIGHTPOS));
+        glUniform3fv(viewPosLocation, 1, glm::value_ptr(cam.getPosition()));
         //glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
-        sphere.nextFrame(deltaTime);
-        constraint.initUniforms(new float[4]{1, 0, 0, 1});
+        solver.nextFrame(deltaTime);
+        constraint.initUniforms((float*)CONSTRAINTCOLOR);
         constraint.drawPoints();
+        light.initUniforms((float*)LIGHTCOLOR);
+        light.setTrans(lightModel);
+        light.drawSphere();
         glfwSwapBuffers(window);
         double const elapsed = glfwGetTime() - startTime;
         if (elapsed < TARGET_FRAME_TIME) {
