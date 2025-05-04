@@ -17,3 +17,9 @@ void Solver::append(Ball *ball) {
     balls.push_back(ball);
     ball->setLocations(shaderProgram);
 }
+
+void Solver::setConstraint(bool set) {
+    for (Ball* ball : balls) {
+        ball->useConstraint=set;
+    }
+}

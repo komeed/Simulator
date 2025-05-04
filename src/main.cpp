@@ -22,16 +22,37 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     (void)window; // Tell the compiler we're intentionally ignoring this parameter
     glViewport(0, 0, width, height);
 }
+void checkArrowKeys(GLFWwindow* window, Camera *camera, float dt) {
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+
+        camera->moveLeft(dt);
+    }
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+        camera->moveRight(dt);
+    }
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+        camera->moveUp(dt);
+    }
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+        camera->moveDown(dt);
+    }
+    if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
+        camera->zoom(-dt);
+    }
+    if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
+        camera->zoom(dt);
+    }
+}
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     UNUSED(scancode);
     UNUSED(mods);
     Solver* solver = static_cast<Solver*>(glfwGetWindowUserPointer(window));
-    if (action == GLFW_PRESS && key == GLFW_KEY_SPACE) {
-        if (key == GLFW_KEY_SPACE) {
-            solver->append(new Ball(glm::vec3(randomFloat(), randomFloat(), randomFloat()), 1, ARADIUS, 15));
-        }
+    if (action == GLFW_REPEAT && key == GLFW_KEY_SPACE) {
+        solver->append(new Ball(glm::vec3(randomFloat(), randomFloat(), randomFloat()), 1, ARADIUS, 15));
+    }
+    if (action == GLFW_PRESS) {
         if (key == GLFW_KEY_Q) {
-
+            solver->setConstraint(false);
         }
     }
 }
@@ -89,7 +110,7 @@ int main() {
     Icosphere light(0.1f, 5, false);
     Icosphere constraint(1, 3, false);
    // Camera cam(glm::vec3(-5, 0, 0), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-    Camera cam(5, 2);
+    Camera cam(5, 0);
     const char fragFile[29] = "Shaders/fragment_shader.glsl";
     const char vertFile[29] = "Shaders/vertex_shader.glsl";
     Shader shader(vertFile, fragFile);
@@ -123,10 +144,10 @@ int main() {
         lastTime = glfwGetTime();
         ///////////////////////////////////////////////
         glfwPollEvents();
+        checkArrowKeys(window, &cam, deltaTime);
         //RENDER
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUseProgram(shaderProgram);
-        cam.rotate(glfwGetTime());
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(cam.getView()));
         glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(cam.getProjection()));
         glUniform3fv(lightPosLocation, 1, glm::value_ptr(LIGHTPOS));

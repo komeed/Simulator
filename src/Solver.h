@@ -15,6 +15,7 @@ public:
     Solver(unsigned int shaderProgram);
     void append(Ball *ball);
     void nextFrame(float dt);
+    void setConstraint(bool set);
 };
 
 

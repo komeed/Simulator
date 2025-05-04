@@ -10,8 +10,6 @@
 class Ball : public Icosphere {
     float mass;
 
-    bool useConstraint = true;
-
     //verlet:
     glm::vec3 pos;
     glm::vec3 dPos;
@@ -39,6 +37,8 @@ public:
     //adjusted radius (based on meters)
     float getAdjustedRadius() { return getRadius()*SCR_HEIGHT*MPR;}
     void checkBounds();
+
+    bool useConstraint = true;
 };
 
 
