@@ -8,10 +8,10 @@
 #include <Solver.h>
 #include <random>
 
-float randomFloat() {
+float rf() {
     static std::random_device rd;                      // Non-deterministic seed
     static std::mt19937 gen(rd());                     // Mersenne Twister engine
-    static std::uniform_real_distribution<float> dist(0.0f, 0.8f);  // Range [0.0, 1.0)
+    static std::uniform_real_distribution<float> dist(0.0f, 1.0f);  // Range [0.0, 1.0)
 
     return dist(gen);  // Call the distribution with the engine
 }
@@ -19,7 +19,7 @@ float randomFloat() {
 // Callback to resize the viewport when window is resized
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-    (void)window; // Tell the compiler we're intentionally ignoring this parameter
+    UNUSED(window);
     glViewport(0, 0, width, height);
 }
 void checkArrowKeys(GLFWwindow* window, Camera *camera, float dt) {
@@ -48,11 +48,16 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     UNUSED(mods);
     Solver* solver = static_cast<Solver*>(glfwGetWindowUserPointer(window));
     if (action == GLFW_REPEAT && key == GLFW_KEY_SPACE) {
-        solver->append(new Ball(glm::vec3(randomFloat(), randomFloat(), randomFloat()), 1, ARADIUS, 15));
+        solver->append(new Ball(glm::vec3(rf()*0.8f, rf()*0.8f, rf()*0.8f), 1, ARADIUS, 15, {rf(), rf(), rf()}));
+        solver->append(new Ball(glm::vec3(rf()*0.8f, rf()*0.8f, rf()*0.8f), 1, ARADIUS, 15, {rf(), rf(), rf()}));
+        solver->append(new Ball(glm::vec3(rf()*0.8f, rf()*0.8f, rf()*0.8f), 1, ARADIUS, 15, {rf(), rf(), rf()}));
     }
     if (action == GLFW_PRESS) {
         if (key == GLFW_KEY_Q) {
             solver->setConstraint(false);
+        }
+        if (key == GLFW_KEY_C) {
+            std::cout << solver->returnCount() << std::endl;
         }
     }
 }

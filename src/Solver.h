@@ -16,6 +16,7 @@ public:
     void append(Ball *ball);
     void nextFrame(float dt);
     void setConstraint(bool set);
+    int returnCount() { return balls.size(); }
 };
 
 

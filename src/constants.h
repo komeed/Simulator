@@ -22,7 +22,7 @@ const float MPR = 0.01f;
 const int numTriangles = 400;
 //fps
 const double TARGET_FRAME_TIME = 1.0f / 30.0f;
-const float RADIUS = 1; // in meters
+const float RADIUS = 0.4f; // in meters
 const float ARADIUS = RADIUS/(SCR_HEIGHT*MPR); // in NPR
 //constraint data
 const float LARGERADIUS = SCR_WIDTH*MPR; // in meters

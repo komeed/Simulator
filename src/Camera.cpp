@@ -18,13 +18,6 @@ Camera::Camera(float radius, float height) : radius(radius) {
     view = glm::lookAt(cameraPos, cameraTarget, cameraUp);
     projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 }
-glm::mat4 Camera::rotate(float time) {
-    float camX = sin(time/2) * radius;
-    float camZ = cos(time/2) * radius;
-    cameraPos = glm::vec3(camX, cameraPos.y, camZ);
-    view = glm::lookAt(cameraPos, cameraTarget, cameraUp);
-    return view;
-}
 
 glm::mat4 Camera::getView() {
     //std::cout << yaw << " " << pitch << std::endl;

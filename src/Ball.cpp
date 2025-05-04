@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-Ball::Ball(glm::vec3 position, float mass, float radius, int subdivisions) : Icosphere(radius, subdivisions, true), mass(mass) {
+Ball::Ball(glm::vec3 position, float mass, float radius, int subdivisions, std::array<float, 3> color) : Icosphere(radius, subdivisions, true), mass(mass), color(color) {
     pos = position*(SCR_HEIGHT*MPR);
     lastP = pos;
     dPos = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -51,7 +51,7 @@ void Ball::applyForce(glm::vec3 force, float mag) {
 }
 
 void Ball::render() {
-    initUniforms((float*)BALLCOLOR);
+    initUniforms(color.data());
     drawSphere();
 }
 void Ball::checkCollision(std::vector<Ball *> balls) {

@@ -21,7 +21,6 @@ class Camera {
 public:
     Camera(glm::vec3 cameraPos, glm::vec3 cameraTarget, glm::vec3 cameraUp);
     Camera(float radius, float height);
-    glm::mat4 rotate(float time);
 
     //move
     void moveLeft(float dt) { yaw += dt; }

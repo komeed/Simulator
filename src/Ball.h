@@ -19,11 +19,13 @@ class Ball : public Icosphere {
     std::vector<glm::vec3> forces;
     glm::vec3 sigmaForce;
 
+    std::array<float, 3> color;
+
     glm::vec2 returnFinalV(float m1, float m2, float v1, float v2);
 
 
 public:
-    Ball(glm::vec3 position = glm::vec3(0, 0, 0), float mass = 1, float radius = 1, int subdivisions = 2);
+    Ball(glm::vec3 position = glm::vec3(0, 0, 0), float mass = 1, float radius = 1, int subdivisions = 2, std::array<float, 3> color = {BALLCOLOR[0], BALLCOLOR[1], BALLCOLOR[2]});
     //~Ball();
     void applyForce(glm::vec3 force, float mag);
     void updatePosition(float deltaTime);
@@ -37,6 +39,8 @@ public:
     //adjusted radius (based on meters)
     float getAdjustedRadius() { return getRadius()*SCR_HEIGHT*MPR;}
     void checkBounds();
+
+    std::array<float, 3> getColor() { return color; }
 
     bool useConstraint = true;
 };
