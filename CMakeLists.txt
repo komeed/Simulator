@@ -37,6 +37,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE src)
 # ---Add GLFW---
 add_subdirectory(lib/glfw)
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+find_library(GLFWLIB glfw REQUIRED)
+message(WARNING ${GLFWLIB})
 #add_subdirectory(lib/stb)
 #target_link_libraries(${PROJECT_NAME} PRIVATE stb)
 # ---Add glad---

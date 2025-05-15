@@ -88,7 +88,7 @@ public:
     // debug
     void printSelf() const;
 
-    void initUniforms(float sphereColor[3]);
+    void initUniforms();
 
 protected:
     glm::mat4 trans;

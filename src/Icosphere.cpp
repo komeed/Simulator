@@ -157,10 +157,8 @@ void Icosphere::printSelf() const
 // OpenGL RC must be set before calling it
 ///////////////////////////////////////////////////////////////////////////////
 
-void Icosphere::initUniforms(float sphereColor[3]) {
+void Icosphere::initUniforms() {
     glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
-    glUniform3f(colorLoc, sphereColor[0], sphereColor[1], sphereColor[2]);
-    glUniform3f(lightColorLoc, LIGHTCOLOR[0], LIGHTCOLOR[1], LIGHTCOLOR[2]);
 }
 
 

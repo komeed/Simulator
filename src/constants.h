@@ -26,6 +26,9 @@ const float RADIUS = 0.4f; // in meters
 const float ARADIUS = RADIUS/(SCR_HEIGHT*MPR); // in NPR
 //constraint data
 const float LARGERADIUS = SCR_WIDTH*MPR; // in meters
+//rounded Large Radius (for cells)
+const int RLARGERADIUS = std::round(LARGERADIUS/(RADIUS*2));
+
 const float NUMLINES = 40;
 
 //colors

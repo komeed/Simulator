@@ -24,7 +24,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 }
 void checkArrowKeys(GLFWwindow* window, Camera *camera, float dt) {
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-
         camera->moveLeft(dt);
     }
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
@@ -48,9 +47,12 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     UNUSED(mods);
     Solver* solver = static_cast<Solver*>(glfwGetWindowUserPointer(window));
     if (action == GLFW_REPEAT && key == GLFW_KEY_SPACE) {
-        solver->append(new Ball(glm::vec3(rf()*0.8f, rf()*0.8f, rf()*0.8f), 1, ARADIUS, 15, {rf(), rf(), rf()}));
-        solver->append(new Ball(glm::vec3(rf()*0.8f, rf()*0.8f, rf()*0.8f), 1, ARADIUS, 15, {rf(), rf(), rf()}));
-        solver->append(new Ball(glm::vec3(rf()*0.8f, rf()*0.8f, rf()*0.8f), 1, ARADIUS, 15, {rf(), rf(), rf()}));
+        solver->append(new Ball(glm::vec3(rf()*0.8f, rf()*0.8f, rf()*0.8f), 1, ARADIUS, 15));
+        solver->append(new Ball(glm::vec3(rf()*0.8f, rf()*0.8f, rf()*0.8f), 1, ARADIUS, 15));
+        solver->append(new Ball(glm::vec3(rf()*0.8f, rf()*0.8f, rf()*0.8f), 1, ARADIUS, 15));
+    }
+    if (action == GLFW_REPEAT && key == GLFW_KEY_U) {
+        solver->applyForce(glm::vec3(0, 1, 0), 50);
     }
     if (action == GLFW_PRESS) {
         if (key == GLFW_KEY_Q) {
@@ -130,6 +132,7 @@ int main() {
 
     constraint.setLocations(shaderProgram);
     light.setLocations(shaderProgram);
+    bool debugMode = false;
     // Render loop
     double lastTime = glfwGetTime();
     double timer = lastTime;
@@ -137,10 +140,13 @@ int main() {
     lightModel = glm::translate(lightModel, LIGHTPOS);
     unsigned int lightPosLocation = glGetUniformLocation(shaderProgram, "lightPos");
     unsigned int viewPosLocation = glGetUniformLocation(shaderProgram, "viewPos");
+    unsigned int colorLoc = glGetUniformLocation(shaderProgram, "objectColor");
+    unsigned int lightColorLoc = glGetUniformLocation(shaderProgram, "lightColor");
     glfwSetKeyCallback(window, key_callback);
+    bool pressed = false;
     while (!glfwWindowShouldClose(window))
     {
-        double const startTime = glfwGetTime();
+        double startTime = glfwGetTime();
         double const deltaTime = startTime - lastTime;
         if (int(timer + deltaTime) > int(timer)) {
             // std::cout << int(timer) << std::endl;
@@ -150,6 +156,12 @@ int main() {
         ///////////////////////////////////////////////
         glfwPollEvents();
         checkArrowKeys(window, &cam, deltaTime);
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+            debugMode = true;
+        }
+        if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+            debugMode = false;
+        }
         //RENDER
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUseProgram(shaderProgram);
@@ -157,17 +169,46 @@ int main() {
         glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(cam.getProjection()));
         glUniform3fv(lightPosLocation, 1, glm::value_ptr(LIGHTPOS));
         glUniform3fv(viewPosLocation, 1, glm::value_ptr(cam.getPosition()));
-        //glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+        glUniform3f(colorLoc, BALLCOLOR[0], BALLCOLOR[1], BALLCOLOR[2]);
+        glUniform3f(lightColorLoc, LIGHTCOLOR[0], LIGHTCOLOR[1], LIGHTCOLOR[2]);
         solver.nextFrame(deltaTime);
-        constraint.initUniforms((float*)CONSTRAINTCOLOR);
+        glUniform3f(colorLoc, CONSTRAINTCOLOR[0], CONSTRAINTCOLOR[1], CONSTRAINTCOLOR[2]);
+        constraint.initUniforms();
         constraint.drawPoints();
-        light.initUniforms((float*)LIGHTCOLOR);
         light.setTrans(lightModel);
+        glUniform3f(colorLoc, LIGHTCOLOR[0], LIGHTCOLOR[1], LIGHTCOLOR[2]);
+        light.initUniforms();
         light.drawSphere();
         glfwSwapBuffers(window);
+        double const footime = glfwGetTime();
+        if (pressed) {
+            while (glfwGetKey(window, GLFW_KEY_N) != GLFW_RELEASE) {
+                glfwWaitEvents();
+
+            }
+            pressed = false;
+        }
+        if (debugMode) {
+            while (glfwGetKey(window, GLFW_KEY_N) != GLFW_PRESS && !pressed) {
+                glfwWaitEvents();
+                if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+                    debugMode = false;
+                    break;
+                }
+            }
+            pressed = true;
+        }
+        startTime += (glfwGetTime() - footime);
+        lastTime += (glfwGetTime() - footime);
         double const elapsed = glfwGetTime() - startTime;
-        if (elapsed < TARGET_FRAME_TIME) {
+        /*if (elapsed < TARGET_FRAME_TIME) {
             std::this_thread::sleep_for(std::chrono::duration<double>(TARGET_FRAME_TIME - elapsed));
+        }*/
+        if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) {
+            std::cout << 1/elapsed << std::endl;
+        }
+        if (1/elapsed < 10) {
+            std::cout << solver.returnCount() << std::endl;
         }
     }
 

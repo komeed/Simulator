@@ -42,31 +42,37 @@ void Ball::updatePosition(float deltaTime) {
     pos = pos + velocity + accel * deltaTime * deltaTime;
     checkBounds();
     sigmaForce = glm::vec3(0.0f, 0.0f, 0.0f);
-    trans = glm::translate(glm::mat4(1.0f), pos/(SCR_HEIGHT*MPR));
+    updateBoxPos();
+    //std::cout << roundedPos.x << ", " << roundedPos.y << ", " << roundedPos.z << std::endl;
+    //std::cout << RLARGERADIUS << std::endl;
+    trans = glm::translate(glm::mat4(1.0f), (pos)/(SCR_HEIGHT*MPR));
 }
 
-void Ball::applyForce(glm::vec3 force, float mag) {
-    sigmaForce += force * mag;
+void Ball::applyForce(glm::vec3 force) {
+    sigmaForce += force;
     accel = sigmaForce / mass;
 }
 
 void Ball::render() {
-    initUniforms(color.data());
+    initUniforms();
     drawSphere();
 }
 void Ball::checkCollision(std::vector<Ball *> balls) {
     for (Ball* ball : balls) {
         if (this != ball) {
-            //float d1 = glm::distance(this->getPos(), ball->getPos());
-            float dx = this->getAdjustedRadius() + ball->getAdjustedRadius() - glm::distance(this->getPos(), ball->getPos());
-            if (dx > glm::epsilon<float>()) {
-                glm::vec3 direction = this->getPos() - ball->getPos();
-                glm::vec3 unitDir = glm::normalize(direction);
-                this->pos = this->pos + unitDir * dx/2.0f;
-                this->checkBounds();
-                ball->pos = ball->pos - unitDir*dx/2.0f;
-                ball->checkBounds();
-            }
+            collide(this, ball);
         }
+    }
+}
+
+void Ball::collide(Ball* ball1, Ball* ball2) {
+    float dx = ball1->getAdjustedRadius() + ball2->getAdjustedRadius() - glm::distance(ball1->getPos(), ball2->getPos());
+    if (dx > glm::epsilon<float>()) {
+        glm::vec3 direction = ball1->getPos() - ball2->getPos();
+        glm::vec3 unitDir = glm::normalize(direction);
+        ball1->pos = ball1->pos + unitDir * dx/2.0f;
+        ball1->checkBounds();
+        ball2->pos = ball2->pos - unitDir*dx/2.0f;
+        ball2->checkBounds();
     }
 }
