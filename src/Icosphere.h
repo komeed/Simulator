@@ -16,12 +16,7 @@
 #include <vector>
 #include <map>
 #include <constants.h>
-
-struct Buffers {
-    unsigned int VAO;
-    unsigned int VBO;
-    unsigned int EBO;
-};
+#include <Buffers.h>
 
 class Icosphere
 {

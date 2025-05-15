@@ -6,10 +6,24 @@
 
 #include <ostream>
 
-Solver::Solver(unsigned int shaderProgram) : shaderProgram(shaderProgram) {
+Solver::Solver(float radius, int sub, bool smooth, unsigned int shaderProgram) : radius(radius), subdivision(sub), smooth(smooth), interleavedStride(32){
+    this->shaderProgram = shaderProgram;
+    if(smooth)
+        buildVerticesSmooth();
+    else
+        buildVerticesFlat();
+    combineVertices();
     initCells();
     sigmaForce = glm::vec3(0, 0, 0);
+    generateBuffers();
 }
+
+void Solver::generateBuffers() {
+    generateLineBuffer();
+    generatePointBuffer();
+    generateSphereBuffer();
+}
+
 
 void Solver::initCells() {
 
@@ -48,12 +62,18 @@ void Solver::nextFrame(float dt) {
 }
 void Solver::updateStoredCells(Ball *ball) { // store rounded locations into cells 3d matrix
     glm::vec3 foo = ball->getRoundedPos();
-    storedIndices.push_back(glm::vec3(foo.x+RLARGERADIUS,foo.y+RLARGERADIUS,foo.z+RLARGERADIUS));
-    cells[foo.x+RLARGERADIUS][foo.y+RLARGERADIUS][foo.z+RLARGERADIUS].balls.push_back(ball);
+    int x = foo.x + RLARGERADIUS;
+    int y = foo.y + RLARGERADIUS;
+    int z = foo.z + RLARGERADIUS;
+    if ((x > 0 && x < int(cells.size()))&&(y > 0 && y < int(cells[0].size()))&&(z > 0 && z < int(cells[0][0].size()))) {
+        storedIndices.push_back(glm::vec3(foo.x+RLARGERADIUS,foo.y+RLARGERADIUS,foo.z+RLARGERADIUS));
+        cells[foo.x+RLARGERADIUS][foo.y+RLARGERADIUS][foo.z+RLARGERADIUS].balls.push_back(ball);
+    }
 }
 void Solver::append(std::unique_ptr<Ball> ball) {
     balls.push_back(std::move(ball));
     balls[balls.size()-1]->setLocations(shaderProgram);
+    balls[balls.size()-1]->generateBuffers(combinedVertices, indices, lineIndices, sphereBuffer, pointBuffer, lineBuffer, radius);
 }
 
 void Solver::setConstraint(bool set) {
@@ -134,9 +154,9 @@ void Solver::collide(Ball* ball1, Ball* ball2) {
         glm::vec3 direction = ball1->getPos() - ball2->getPos();
         glm::vec3 unitDir = glm::normalize(direction);
         ball1->setPos(ball1->getPos() + unitDir * dx/2.0f);
-        ball1->checkBounds();
+        ball1->checkCircleBounds();
         ball2->setPos(ball2->getPos() - unitDir*dx/2.0f);
-        ball2->checkBounds();
+        ball2->checkCircleBounds();
     }
 }
 

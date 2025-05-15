@@ -11,6 +11,8 @@ add_executable(${PROJECT_NAME}
         src/Camera.h
         src/Solver.cpp
         src/Solver.h
+        src/SolverBallInit.cpp
+        src/Buffers.h
 )
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 

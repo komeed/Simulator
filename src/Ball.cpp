@@ -6,22 +6,45 @@
 
 #include <iostream>
 
-Ball::Ball(glm::vec3 position, float mass, float radius, int subdivisions, std::array<float, 3> color) : Icosphere(radius, subdivisions, true), mass(mass), color(color) {
+Ball::Ball(glm::vec3 position, std::array<float, 3> color) : color(color) {
+    mass = 1;
     pos = position*(SCR_HEIGHT*MPR);
     lastP = pos;
     dPos = glm::vec3(0.0f, 0.0f, 0.0f);
     accel = glm::vec3(0.0f, 0.0f, 0.0f);
     sigmaForce = glm::vec3(0.0f, 0.0f, 0.0f);
     velocity = glm::vec3(0.0f, 0.0f, 0.0f);
+    trans = glm::mat4(1.0f);
 }
 
-void Ball::checkBounds() {
+void Ball::checkCircleBounds() {
     if (useConstraint) {
         float d = glm::length(pos);
         float maxDist = LARGERADIUS - getAdjustedRadius();
 
         if (d > maxDist) {
             pos = pos*(maxDist)/d;
+        }
+    }
+}
+
+void Ball::checkRectBounds() {
+    if (useConstraint) {
+        float maxDist = LARGERADIUS - getAdjustedRadius();
+        if (pos.x > maxDist) {
+            pos.x = maxDist;
+        }
+        if (pos.x < -maxDist) {
+            pos.x = -maxDist;
+        }
+        if (pos.z > maxDist) {
+            pos.z = maxDist;
+        }
+        if (pos.z < -maxDist) {
+            pos.z = -maxDist;
+        }
+        if (pos.y < -maxDist) {
+            pos.y = -maxDist;
         }
     }
 }
@@ -40,7 +63,8 @@ void Ball::updatePosition(float deltaTime) {
     velocity = pos - lastP;
     lastP = pos;
     pos = pos + velocity + accel * deltaTime * deltaTime;
-    checkBounds();
+   // checkCircleBounds();
+    checkCircleBounds();
     sigmaForce = glm::vec3(0.0f, 0.0f, 0.0f);
     updateBoxPos();
     //std::cout << roundedPos.x << ", " << roundedPos.y << ", " << roundedPos.z << std::endl;
@@ -54,25 +78,50 @@ void Ball::applyForce(glm::vec3 force) {
 }
 
 void Ball::render() {
-    initUniforms();
+    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
     drawSphere();
 }
-void Ball::checkCollision(std::vector<Ball *> balls) {
-    for (Ball* ball : balls) {
-        if (this != ball) {
-            collide(this, ball);
-        }
-    }
+
+void Ball::drawSphere() const
+{
+    glBindVertexArray(sphereBuffer.VAO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereBuffer.EBO);
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 }
 
-void Ball::collide(Ball* ball1, Ball* ball2) {
-    float dx = ball1->getAdjustedRadius() + ball2->getAdjustedRadius() - glm::distance(ball1->getPos(), ball2->getPos());
-    if (dx > glm::epsilon<float>()) {
-        glm::vec3 direction = ball1->getPos() - ball2->getPos();
-        glm::vec3 unitDir = glm::normalize(direction);
-        ball1->pos = ball1->pos + unitDir * dx/2.0f;
-        ball1->checkBounds();
-        ball2->pos = ball2->pos - unitDir*dx/2.0f;
-        ball2->checkBounds();
-    }
+///////////////////////////////////////////////////////////////////////////////
+// draw lines only
+// the caller must set the line width before call this
+///////////////////////////////////////////////////////////////////////////////
+void Ball::drawLines() const
+{
+    glBindVertexArray(lineBuffer.VAO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lineBuffer.EBO);
+    glDrawElements(GL_LINES, lineIndices.size(), GL_UNSIGNED_INT, 0);
+}
+
+void Ball::drawPoints() const {
+    glBindVertexArray(pointBuffer.VAO);
+    glDrawArrays(GL_POINTS, 0, combinedVertices.size()/3);
+}
+
+void Ball::setLocations(unsigned int shaderProgram) {
+    transformLoc = glGetUniformLocation(shaderProgram, "transform");
+    colorLoc = glGetUniformLocation(shaderProgram, "objectColor");
+    lightColorLoc = glGetUniformLocation(shaderProgram, "lightColor");
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// generate buffers
+///////////////////////////////////////////////////////////////////////////////
+
+void Ball::generateBuffers(std::vector<float> vertices, std::vector<unsigned int> ind, std::vector<unsigned int> lineInd, Buffers sphere, Buffers point, Buffers line, float radius) {
+    combinedVertices = vertices;
+    indices = ind;
+    lineIndices = lineInd;
+    this->radius = radius;
+    sphereBuffer = sphere;
+    lineBuffer = line;
+    pointBuffer = point;
 }

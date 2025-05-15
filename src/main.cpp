@@ -47,12 +47,12 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     UNUSED(mods);
     Solver* solver = static_cast<Solver*>(glfwGetWindowUserPointer(window));
     if (action == GLFW_REPEAT && key == GLFW_KEY_SPACE) {
-        solver->append(std::make_unique<Ball>(glm::vec3(rf()*0.8f, rf()*0.8f, rf()*0.8f), 1, ARADIUS, 15));
-        solver->append(std::make_unique<Ball>(glm::vec3(rf()*0.8f, rf()*0.8f, rf()*0.8f), 1, ARADIUS, 15));
-        solver->append(std::make_unique<Ball>(glm::vec3(rf()*0.8f, rf()*0.8f, rf()*0.8f), 1, ARADIUS, 15));
+        for (int _ = 0; _ < 3; _++) {
+            solver->append(std::make_unique<Ball>(glm::vec3(rf()*0.8f, 0.8f, rf()*0.8f)));
+        }
     }
     if (action == GLFW_REPEAT && key == GLFW_KEY_U) {
-        solver->applyForce(glm::vec3(0, 1, 0), 50);
+        solver->applyForce(glm::vec3(0, 1, 0), 30);
     }
     if (action == GLFW_PRESS) {
         if (key == GLFW_KEY_Q) {
@@ -129,8 +129,8 @@ int main() {
 
     unsigned int viewLoc = glGetUniformLocation(shaderProgram, "view");
     unsigned int projectionLoc = glGetUniformLocation(shaderProgram, "projection");
-    Solver solver(shaderProgram);
-    solver.append(std::make_unique<Ball>(glm::vec3(0, 0, 0.7), 1, ARADIUS, 15));
+    Solver solver(ARADIUS, 15, true, shaderProgram);
+    solver.append(std::make_unique<Ball>(glm::vec3(0, 0, 0.7)));
     glfwSetWindowUserPointer(window, &solver);
 
     constraint.setLocations(shaderProgram);
