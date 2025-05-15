@@ -28,15 +28,15 @@ void Solver::initCells() {
 
 void Solver::nextFrame(float dt) {
     applyForce(glm::vec3(0, -1, 0), 9.8f);
-    for (Ball* ball : balls) {
+    for (auto& ball : balls) {
         ball->applyForce(sigmaForce);
         ball->updatePosition(dt);
-        updateStoredCells(ball);
+        updateStoredCells(ball.get());
         //checkCellCollision(ball);
         //ball->render();
     }
-    for (Ball* ball : balls) {
-        checkCellCollision(ball);
+    for (auto& ball : balls) {
+        checkCellCollision(ball.get());
         //ball->checkCollision(balls);
         ball->render();
     }
@@ -51,13 +51,13 @@ void Solver::updateStoredCells(Ball *ball) { // store rounded locations into cel
     storedIndices.push_back(glm::vec3(foo.x+RLARGERADIUS,foo.y+RLARGERADIUS,foo.z+RLARGERADIUS));
     cells[foo.x+RLARGERADIUS][foo.y+RLARGERADIUS][foo.z+RLARGERADIUS].balls.push_back(ball);
 }
-void Solver::append(Ball *ball) {
-    balls.push_back(ball);
-    ball->setLocations(shaderProgram);
+void Solver::append(std::unique_ptr<Ball> ball) {
+    balls.push_back(std::move(ball));
+    balls[balls.size()-1]->setLocations(shaderProgram);
 }
 
 void Solver::setConstraint(bool set) {
-    for (Ball* ball : balls) {
+    for (auto& ball : balls) {
         ball->useConstraint=set;
     }
 }

@@ -12,7 +12,7 @@ add_executable(${PROJECT_NAME}
         src/Solver.cpp
         src/Solver.h
 )
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_11)
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 # Enable many good warnings
 if (MSVC)

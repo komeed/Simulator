@@ -11,7 +11,8 @@
 #include <iostream>
 
 class Solver {
-    std::vector<Ball*> balls;
+    //std::vector<Ball*> balls;
+    std::vector<std::unique_ptr<Ball>> balls;
     std::vector<std::vector<std::vector<Cell>>> cells;
     std::vector<glm::vec3> storedIndices;
     unsigned int shaderProgram;
@@ -29,11 +30,12 @@ class Solver {
 
 public:
     Solver(unsigned int shaderProgram);
-    void append(Ball *ball);
+    void append(std::unique_ptr<Ball> ball);
     void nextFrame(float dt);
     void setConstraint(bool set);
     int returnCount() { return balls.size(); }
     void applyForce(glm::vec3 force, float mag);
+    void clear() { balls.clear(); }
 };
 
 
